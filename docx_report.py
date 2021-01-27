@@ -6,7 +6,7 @@ from docx import Document
 #from docx.document import Document
 from docx.shared import Pt
 from docx.shared import RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.text.paragraph import Paragraph
 
 # print ('Количество аргументов:', len(sys.argv), 'аргументы.')
@@ -14,7 +14,7 @@ from docx.text.paragraph import Paragraph
 
 doc = Document()
 
-with open('csv.csv',  encoding='utf-8') as file:
+with open('csv.csv', encoding='utf-8') as file:
     
     cv = pandas.read_csv(file, sep = ';')
 
