@@ -8,7 +8,7 @@ from docx.shared import RGBColor
 
 doc = Document()
 
-with open('csv.csv',  encoding='utf-8') as file:
+with open('csv.csv', encoding='utf-8') as file:
     
     cv = pandas.read_csv(file, sep = ';')
 
