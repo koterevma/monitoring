@@ -3,14 +3,8 @@ import csv
 import pandas
 
 from docx import Document
-#from docx.document import Document
 from docx.shared import Pt
 from docx.shared import RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.text.paragraph import Paragraph
-
-# print ('Количество аргументов:', len(sys.argv), 'аргументы.')
-# print ('Список аргументов:', str(sys.argv))
 
 doc = Document()
 
@@ -36,14 +30,10 @@ with open('csv.csv',  encoding='utf-8') as file:
     for column in cv.columns:
         table.cell(j,0).text = column
         j=j+1
-    
-
-    for column in cv.columns:
         m = 0
         n = 0
         for i in range(row):
             if str(cv[column][i])=='0':
-                #print(column+' there is zero\n')
                 m = m+1
                 if n!=0:
                     variable.append(cv.columns.get_loc(column))
