@@ -1,14 +1,17 @@
-import sys
-import csv
 import pandas
-
+import datetime
+from pathlib import Path
 from docx import Document
 from docx.shared import Pt
 from docx.shared import RGBColor
 
 doc = Document()
 
-with open('csv.csv', encoding='utf-8') as file:
+today_date = datetime.date.today().strftime("%d-%m-%y-")
+path_file_in = Path(f"data/{today_date}info.csv")
+path_file_out = Path(f"reports/{today_date}report.docx")
+
+with open(path_file_in, encoding='utf-8') as file:
     
     cv = pandas.read_csv(file, sep = ';')
 
@@ -57,4 +60,4 @@ with open('csv.csv', encoding='utf-8') as file:
         table.cell(i,1).text = 'var'
     print(variable)
 
-doc.save('doc.docx')
+doc.save(path_file_out)
