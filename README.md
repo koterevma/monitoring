@@ -1,3 +1,3 @@
 # monitoring
-Project for monitoring university's servers
-Soon couple instructions will be added
+Project for monitoring university's servers<br/>
+Couple of instrucions will be added soon
