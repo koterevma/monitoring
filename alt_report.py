@@ -2,6 +2,7 @@ import pandas as pd
 import datetime
 from pathlib import Path
 from docx import Document
+from docx.shared import RGBColor
 
 
 def main():
@@ -9,7 +10,7 @@ def main():
     path_file_in = Path(f"data/{today_date}info.csv")
     path_file_out = Path(f"reports/{today_date}report.docx")
 
-    with open(path_file_in, 'r') as file:
+    with open(path_file_in, 'r', encoding="utf-8") as file:
         df = pd.read_csv(file, delimiter=';')
 
     df = df.set_index('Date')
@@ -27,7 +28,7 @@ def main():
 
     doc = Document()
     table = doc.add_table(df.shape[1] + 1, len(dates))
-    table.cell(0, 0).text = 'Date'
+    table.cell(0, 0).text = 'Дата'
 
     for i, col in enumerate(df.columns):
         table.cell(i + 1, 0).text = col
@@ -37,7 +38,16 @@ def main():
     
     for i, list_of_vals in enumerate(values):
         for j, val in enumerate(list_of_vals):
-            table.cell(j + 1, i + 1).text = str(val)
+            if val==0:
+                paragraph = table.cell(j+1,i+1).paragraphs[0]
+                run = paragraph.add_run('Нет данных')
+                run.font.color.rgb = RGBColor(255,0,0)
+                continue
+            elif val==1:
+                paragraph = table.cell(j+1,i+1).paragraphs[0]
+                run = paragraph.add_run('Есть данные')
+                run.font.color.rgb = RGBColor(0,200,0)
+                continue
 
     doc.save(path_file_out)
 
