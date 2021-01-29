@@ -3,6 +3,7 @@ import datetime
 from pathlib import Path
 from docx import Document
 
+
 def main():
     today_date = datetime.date.today().strftime("%d-%m-%y-")
     path_file_in = Path(f"data/{today_date}info.csv")
@@ -39,6 +40,7 @@ def main():
             table.cell(j + 1, i + 1).text = str(val)
 
     doc.save(path_file_out)
+
 
 if __name__ == '__main__':
     main()
