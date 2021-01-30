@@ -19,6 +19,7 @@ def main():
     curr_row = df.iloc[0]
     dates = [ df.index[0] ]
     values = [ list(curr_row) ]
+
     for idx, row in df.iterrows():
         if list(curr_row) != list(row):
             dates.append(idx)
@@ -32,21 +33,21 @@ def main():
 
     for i, col in enumerate(df.columns):
         table.cell(i + 1, 0).text = col
-    print(dates)
+
     for i, date in enumerate(dates[:-1]):
         table.cell(0, i + 1).text = date.strftime("%H:%M:%S - ") + dates[i + 1].strftime("%H:%M:%S")
     
     for i, list_of_vals in enumerate(values):
         for j, val in enumerate(list_of_vals):
-            if val==0:
-                paragraph = table.cell(j+1,i+1).paragraphs[0]
+            if val == 0:
+                paragraph = table.cell(j + 1, i + 1).paragraphs[0]
                 run = paragraph.add_run('Нет данных')
-                run.font.color.rgb = RGBColor(255,0,0)
+                run.font.color.rgb = RGBColor(255, 0, 0)
                 continue
             elif val==1:
-                paragraph = table.cell(j+1,i+1).paragraphs[0]
+                paragraph = table.cell(j + 1, i + 1).paragraphs[0]
                 run = paragraph.add_run('Есть данные')
-                run.font.color.rgb = RGBColor(0,200,0)
+                run.font.color.rgb = RGBColor(0, 200, 0)
                 continue
 
     doc.save(path_file_out)

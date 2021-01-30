@@ -1,6 +1,7 @@
 import requests
 import datetime
 from pathlib import Path
+import os
 from progress.bar import IncrementalBar
 import json
 from telebot import TeleBot
@@ -16,10 +17,15 @@ bot = TeleBot(token)
 
 today_date = datetime.date.today().strftime("%d-%m-%y-")
 
-chat_ids = Path("chat_ids.txt")
-errors_path = Path(f"err_msg/{today_date}msg.txt")
+# Right way to work with relative paths
+working_directory = Path(__file__).parent
+chat_ids = working_directory / "chat_ids.txt"
+path_to_errors = working_directory / "err_msg"
 
 # Лучше все константы вынести в отдельный файл
+# Можно вынести все в json формат, в том числе сделать
+# json с информацией об еденицах измерения всех датчиков
+# (для построения графиков)
 urls = {
     "webrobo": "http://webrobo.mgul.ac.ru:3000/",
     "dbrobo": "http://dbrobo.mgul.ac.ru/",
@@ -73,14 +79,24 @@ if __name__ == "__main__":
     else:
         error_text = []
         # print(today_date)
-        path_file_out = Path(f"data/{today_date}info.csv")
+        path_to_data = working_directory / "data"
+
+        # Mayby it's a good idea to move some init setup such as creating
+        # folders for files into another script like setup.py.
+        # Virtual enviroment could be also set up from such script
+        if not path_to_data.exists():
+            os.mkdir(path_to_data)
+        
+        path_file_out = path_to_data / f"{today_date}info.csv"
         if not path_file_out.is_file():
             print("Creating file \"info.csv\"")
             form_names(path_file_out)
             print("File created")
+        
         print("Getting information about sites and devices")
         pr_bar = IncrementalBar("In progress", max=len(urls)+1)
         statuses = []
+
         for name, url in urls.items():
             req = requests.get(url)
             if req.status_code == 200:
@@ -95,6 +111,7 @@ if __name__ == "__main__":
         dev_dict = dict([(i, '0') for i in devices])
         url = 'http://webrobo.mgul.ac.ru:3000/db_api_REST/not_calibr/last5min/'
         req = requests.get(url)
+
         if req.status_code != 200:
             pr_bar.clearln()
             print(f"{bcolors.FAIL}Error with connection to db_api_REST. Code: {req.status_code}{bcolors.ENDC}")
@@ -105,6 +122,7 @@ if __name__ == "__main__":
                 nase = str(data_in_json[record]['serial']) + ' ' + str(data_in_json[record]['uName']).replace(' ', "%20")
                 if nase in dev_dict.keys():
                     dev_dict[nase] = '1'
+            
             pr_bar.next()
 
         pr_bar.finish()
@@ -119,12 +137,21 @@ if __name__ == "__main__":
             file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:00") + ';')
             file.write(';'.join(statuses))
             file.write('\n')
-            # print(file)
         
-        if error_text != [] and not errors_path.is_file():
-            with open(errors_path, 'w', encoding='utf-8') as opened_err_file:
+        # Mayby it's a good idea to move some init setup such as creating
+        # folders for files into another script like setup.py.
+        # Virtual enviroment could be also set up from such script
+        if not path_to_errors.exists():
+            os.mkdir(path_to_errors)
+
+        errors_file = path_to_errors / f"{today_date}msg.txt"
+
+        # If some errors were spotted during check and if we didn't send 
+        if error_text != [] and not errors_file.is_file():
+            with open(errors_file, 'w', encoding='utf-8') as opened_err_file:
                 opened_err_file.writelines([l + '\n' for l in error_text]) # Можно немного доделать - проверять содержимое файла и если оно не совпадает с сообшением об ошибке - отправлять
-            with open(chat_ids, 'r') as ids:
+            
+            with open(chat_ids, 'r', encoding='utf-8') as ids:
                 for chat_id in ids:
                     try:
                         bot.send_message(chat_id, "\n".join(error_text))
