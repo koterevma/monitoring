@@ -341,6 +341,9 @@ def get_data(uName, serial, type):
     return x_arr, y_arr
 
 
+def rounding(x_arr):
+    return [round(i, 3) for i in x_arr]
+
 ####################################################################
 def Kalman_filter(x_arr):
     sPsi = 1
@@ -406,19 +409,32 @@ def update_graph(sensor, type_, round_, filter):
         showlegend=False,
         autosize=True,
         height=710,
-        colorway=['rgb(15,136,255)', 'rgb(0,204,58)', 'rgb(255,217,31)',
-                  'rgb(236,139,85)', 'rgb(232,105,147)', 'rgb(196,3,181)',
-                  'rgb(126,28,233)'],
+        colorway=['rgb(0,48,255)', 'rgb(0,204,58)', 'rgb(255,154,0)',
+                  'rgb(255,0,0)', 'rgb(180,0,210)', 'rgb(0,205,255)', 'rgb(115,90,79)'],
 
         margin=dict(t=0, b=10, r=40, l=20),
         font_color='white',
         plot_bgcolor='white',
-        paper_bgcolor="rgb(75, 75, 83)"
+        paper_bgcolor="rgb(75, 75, 83)",
+
+        hoverlabel=dict(
+            bgcolor="rgb(75, 75, 83)",
+            font_size=16,
+            font_family="Rockwell",
+        ),
+        hovermode="x unified"
+
     )
     fig.update_xaxes(
+<<<<<<< HEAD
         linecolor='black',
         gridcolor='lightgrey',
         zerolinecolor='black',
+=======
+        linecolor='Gainsboro',
+        gridcolor='Gainsboro',
+        zerolinecolor='Gainsboro',
+>>>>>>> 25fcab734a77cf35e63139af990dd411e04ff6bc
         rangeslider_visible=True,
         # rangeselector=dict(
         #     buttons=list([
@@ -430,9 +446,15 @@ def update_graph(sensor, type_, round_, filter):
         # )
     ),
     fig.update_yaxes(
+<<<<<<< HEAD
         linecolor='black',
         gridcolor='lightgrey',
         zerolinecolor='black',
+=======
+        linecolor='Gainsboro',
+        gridcolor='Gainsboro',
+        zerolinecolor='Gainsboro',
+>>>>>>> 25fcab734a77cf35e63139af990dd411e04ff6bc
     )
 
     if sensor is None:
@@ -442,17 +464,20 @@ def update_graph(sensor, type_, round_, filter):
         uName, serial, item = get_info(el)
 
         x_arr, y_arr = get_data(uName, serial, item)
+
         x_arr, y_arr = sort(round_, x_arr, y_arr)
         if filter:
             y_arr = Kalman_filter(y_arr)
+        y_arr = rounding(y_arr)
+
         if 'group' in type_:
             fig.add_trace(go.Histogram(x=x_arr, y=y_arr, name="{} ({})".format(uName + ' ' + serial, item)))
             fig.update_traces(opacity=0.4)
             # fig.update_traces(opacity=0.4, histnorm="density", histfunc="sum")
             fig.update_layout(barmode='overlay')
         else:
-            fig.add_trace(go.Scatter(x=x_arr, y=y_arr, mode=type_, name="{} ({})".format(uName + ' ' + serial, item)))
-
+            fig.add_trace(go.Scatter(x=x_arr, y=y_arr, mode=type_, name="{} ({})".format(uName + ' ' + serial, item),
+                                     hovertemplate="<b>%{y}</b>"))
     # if round_ == 'day':
     #     temp_x, temp_y = GetMeteo('temp', date1, date2)
     #     fig.add_trace(go.Scatter(x=temp_x, y=temp_y, mode=type_, name="GetMeteo_temp"))
