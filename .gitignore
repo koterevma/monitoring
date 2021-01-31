@@ -5,4 +5,3 @@ reports/*
 cron_scripts/*
 private_data.json
 chat_ids.txt
-for_testing.py
