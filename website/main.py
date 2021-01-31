@@ -452,10 +452,11 @@ def update_graph(sensor, type_, round_, filter):
         uName, serial, item = get_info(el)
 
         x_arr, y_arr = get_data(uName, serial, item)
-        y_arr = rounding(y_arr)
+
         x_arr, y_arr = sort(round_, x_arr, y_arr)
         if filter:
             y_arr = Kalman_filter(y_arr)
+        y_arr = rounding(y_arr)
 
         if 'group' in type_:
             fig.add_trace(go.Histogram(x=x_arr, y=y_arr, name="{} ({})".format(uName + ' ' + serial, item)))
