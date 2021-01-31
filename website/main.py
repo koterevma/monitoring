@@ -417,7 +417,7 @@ def update_graph(sensor, type_, round_, filter):
     )
     fig.update_xaxes(
         linecolor='black',
-        gridcolor='black',
+        gridcolor='lightgrey',
         zerolinecolor='black',
         rangeslider_visible=True,
         # rangeselector=dict(
@@ -431,7 +431,7 @@ def update_graph(sensor, type_, round_, filter):
     ),
     fig.update_yaxes(
         linecolor='black',
-        gridcolor='black',
+        gridcolor='lightgrey',
         zerolinecolor='black',
     )
 
