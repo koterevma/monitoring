@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import requests
 import json
 from datetime import datetime as dt, timedelta as td
-from datetime import date as date
+from datetime import date
 
 data = []
 date1, date2 = None, None
