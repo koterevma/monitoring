@@ -8,9 +8,8 @@ import plotly.graph_objects as go
 from bs4 import BeautifulSoup
 import requests
 import json
-from datetime import datetime as dt
-from datetime import date as date
-
+from datetime import datetime as dt, timedelta as td
+from datetime import date
 
 data = []
 date1, date2 = None, None
@@ -105,7 +104,7 @@ def build_right_block():
                         max_date_allowed=date.today(),
                         initial_visible_month=date.today(),
                         start_date=date.today(),
-                        end_date=dt(dt.now().year, dt.now().month, dt.now().day + 1),
+                        end_date=date.today() + td(days=1),
                     ),
                 ],
 
