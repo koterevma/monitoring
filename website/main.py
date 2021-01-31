@@ -31,7 +31,7 @@ def build_banner():
                         ]
                     ),
 
-                 ], style={'display': 'flex','align-items': 'center'}
+                ], style={'display': 'flex', 'align-items': 'center'}
             ),
             html.Div(
                 children=[
@@ -119,7 +119,7 @@ def build_right_block():
                             color='rgb(16,119,94)',
                             labelPosition='top'
                         ),
-                        #style={'display': 'inline-block'}
+                        # style={'display': 'inline-block'}
                     ),
                     html.Div(
                         daq.BooleanSwitch(
@@ -136,10 +136,10 @@ def build_right_block():
             ),
 
             dcc.Upload(
-                #html.Button('Upload File'),
+                # html.Button('Upload File'),
                 id='upload'
             ),
-        ], style={'width': '40%',  'display': 'inline-block', 'padding': '10px 10px 0px 50px'}
+        ], style={'width': '40%', 'display': 'inline-block', 'padding': '10px 10px 0px 50px'}
     )
 
 
@@ -163,6 +163,7 @@ app.layout = html.Div(
                                 "displayModeBar": False,
                             },
                             )], style={'width': '100%', 'padding': '0px 0px 0px 0px'})])
+
 
 ####################################################################
 def get_html_page(url):
@@ -217,6 +218,7 @@ def GetMeteo(type_, date_begin, date_end):
         x_arr.extend(next_x)
         y_arr.extend(next_y)
     return x_arr, y_arr
+
 
 ####################################################################
 # def CSV(data, type_):
@@ -340,24 +342,22 @@ def get_data(uName, serial, type):
 
 
 ####################################################################
-def Kalman_filter(x_arr, y_arr):
+def Kalman_filter(x_arr):
     sPsi = 1
     sEta = 50
     x_opt = [x_arr[0]]
     e_opt = [sEta]
 
     for i in range(1, len(x_arr)):
-
-        e_opt.append((sEta**2 * (e_opt[len(e_opt)-1]**2 + sPsi**2) / (sEta**2 + e_opt[len(e_opt)-1]**2 + sPsi**2))**0.5)
-        K = e_opt[len(e_opt)-1]**2 / sEta**2
-
+        e_opt.append((sEta ** 2 * (e_opt[-1] ** 2 + sPsi ** 2) / (sEta ** 2 + e_opt[-1] ** 2 + sPsi ** 2)) ** 0.5)
+        K = e_opt[-1] ** 2 / sEta ** 2
         x_opt.append(K * x_arr[i] + (1 - K) * x_opt[i - 1])
-    return x_opt, y_arr
+
+    return x_opt
 
 
 @app.callback([Output('appliances', 'options'), Output('appliances', 'value')],
               [Input('date', 'start_date'), Input('date', 'end_date'), dash.dependencies.Input('Online', 'on')])
-
 def update_dropdown(start_date, end_date, on):
     global data, date1, date2
     if not data or (date1 != start_date or date2 != end_date):
@@ -374,7 +374,8 @@ def update_dropdown(start_date, end_date, on):
     return res, None
 
 
-@app.callback([Output('sensor', 'options'), Output('sensor', 'value')], [Input('appliances', 'value')])
+@app.callback([Output('sensor', 'options'), Output('sensor', 'value')],
+              [Input('appliances', 'value')])
 def update_sensor(appliances):
     res = []
     if appliances is not None:
@@ -390,8 +391,9 @@ def update_sensor(appliances):
 @app.callback(Output('graph', 'figure'),
               [Input('sensor', 'value'),
                Input('type', 'value'),
-               Input('rounding', 'value')])
-def update_graph(sensor, type_, round_):
+               Input('rounding', 'value'),
+               dash.dependencies.Input('Kalman', 'on')])
+def update_graph(sensor, type_, round_, filter):
     fig = go.Figure()
     fig.update_layout(
         yaxis=dict(
@@ -441,11 +443,12 @@ def update_graph(sensor, type_, round_):
 
         x_arr, y_arr = get_data(uName, serial, item)
         x_arr, y_arr = sort(round_, x_arr, y_arr)
-        #x_arr, y_arr = Kalman_filter(x_arr, y_arr)
+        if filter:
+            y_arr = Kalman_filter(y_arr)
         if 'group' in type_:
             fig.add_trace(go.Histogram(x=x_arr, y=y_arr, name="{} ({})".format(uName + ' ' + serial, item)))
             fig.update_traces(opacity=0.4)
-             # fig.update_traces(opacity=0.4, histnorm="density", histfunc="sum")
+            # fig.update_traces(opacity=0.4, histnorm="density", histfunc="sum")
             fig.update_layout(barmode='overlay')
         else:
             fig.add_trace(go.Scatter(x=x_arr, y=y_arr, mode=type_, name="{} ({})".format(uName + ' ' + serial, item)))
@@ -458,4 +461,4 @@ def update_graph(sensor, type_, round_):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True) #True если надо получать сообщения об ошибках
+    app.run_server(debug=True)  # True если надо получать сообщения об ошибках
