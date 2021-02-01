@@ -9,8 +9,9 @@ with open("private_data.json") as json_file:
 token = private_info["bot_token"]
 bot = TeleBot(token)
 
+working_directory = Path(__file__).parent
 # Вывести бы это в базу данных
-in_file = Path("chat_ids.txt")
+in_file = working_directory / "chat_ids.txt"
 
 repl = types.InlineKeyboardMarkup()
 key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
@@ -19,11 +20,12 @@ repl.add(key_yes)
 repl.add(key_no)
 
 
-@bot.message_handler(commands=['start', 'help'])
+@ bot.message_handler(commands=['start', 'help'])
 def handle_start_help(message):
     if message.text == "/help":
         try:
-            bot.send_message(message.from_user.id, "Простой бот, который напишет, если на сервере произошла ошибка.\nБот работает с 8 утра до 16:00\nНапиши мне что-нибудь, либо пиши /start")
+            bot.send_message(
+                message.from_user.id, "Простой бот, который напишет, если на сервере произошла ошибка.\nБот работает с 8 утра до 16:00\nНапиши мне что-нибудь, либо пиши /start")
         except Exception:
             pass
     if message.text == "/start":
@@ -32,7 +34,7 @@ def handle_start_help(message):
                 message.from_user.id,
                 "Привет! Если что-то не понятно, пиши /help\nХочешь получать уведомления от меня, когда серваки вуза падают?)",
                 reply_markup=repl
-                )
+            )
         except Exception:
             pass
 
@@ -44,7 +46,7 @@ def text_from_user(message):
             message.from_user.id,
             "Привет! Если что-то не понятно, пиши /help\nХочешь получать уведомления от меня, когда серваки вуза падают?)",
             reply_markup=repl
-            )
+        )
     except Exception:
         pass
 
