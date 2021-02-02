@@ -1,3 +1,4 @@
+#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 import pandas as pd
 import datetime
 from pathlib import Path
@@ -27,7 +28,8 @@ for i in range(len(df.index)):
     sheet["A{}".format(i + 2)].number_format = "hh:mm:ss"
 
 for i in range(len(df.keys())):
-    sheet.column_dimensions[get_column_letter(i + 2)].width = len(str(sheet[get_column_letter(i + 2) + '1'].value)) + 2
+    sheet.column_dimensions[get_column_letter(
+        i + 2)].width = len(str(sheet[get_column_letter(i + 2) + '1'].value)) + 2
 
 redFill = PatternFill(start_color='FFFF0000',
                       end_color='FFFF0000',

@@ -1,15 +1,16 @@
+#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 from telebot import TeleBot
 from telebot import types
 import json
 from pathlib import Path
 
-with open("private_data.json") as json_file:
+working_directory = Path(__file__).parent
+
+with open(working_directory / "private_data.json") as json_file:
     private_info = json.load(json_file)
 
 token = private_info["bot_token"]
 bot = TeleBot(token)
-
-working_directory = Path(__file__).parent
 # Вывести бы это в базу данных
 in_file = working_directory / "chat_ids.txt"
 
@@ -20,7 +21,7 @@ repl.add(key_yes)
 repl.add(key_no)
 
 
-@ bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start', 'help'])
 def handle_start_help(message):
     if message.text == "/help":
         try:
@@ -107,4 +108,5 @@ def callback_worker(call):
 
 
 if __name__ == "__main__":
+    print("Bot started")
     bot.polling(interval=1)

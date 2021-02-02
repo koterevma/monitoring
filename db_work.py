@@ -1,3 +1,4 @@
+#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 from pathlib import Path
 import sqlite3
 import requests
@@ -44,25 +45,25 @@ def main():
     """)
     conn.commit()
     devices = [
-        ( 1,  "01",      "РОСА%20К-2" ),
-        ( 2,  "01",      "Роса-К-1" ),
-        ( 3,  "schHome", "Тест%20Студии" ),
-        ( 4,  "schHome", "Тест%20воздуха" ),
-        ( 5,  "01",      "Hydra-L" ),
-        ( 6,  "02",      "Hydra-L" ),
-        ( 7,  "03",      "Hydra-L" ),
-        ( 8,  "04",      "Hydra-L" ),
-        ( 9,  "05",      "Hydra-L" ),
-        ( 10, "06",      "Hydra-L" ),
-        ( 11, "07",      "Hydra-L" ),
-        ( 12, "08",      "Hydra-L" ),
-        ( 13, "01",      "Сервер%20СЕВ" ),
-        ( 14, "02",      "Сервер%20СЕВ" ),
-        ( 15, "03",      "Сервер%20СЕВ" ),
-        ( 16, "01",      "КЛОП_МН" ),
-        ( 17, "02",      "КЛОП_МН" ),
-        ( 18, "03",      "КЛОП_МН" ),
-        ( 18, "04",      "КЛОП_МН" )
+        (1,  "01",      "РОСА%20К-2"),
+        (2,  "01",      "Роса-К-1"),
+        (3,  "schHome", "Тест%20Студии"),
+        (4,  "schHome", "Тест%20воздуха"),
+        (5,  "01",      "Hydra-L"),
+        (6,  "02",      "Hydra-L"),
+        (7,  "03",      "Hydra-L"),
+        (8,  "04",      "Hydra-L"),
+        (9,  "05",      "Hydra-L"),
+        (10, "06",      "Hydra-L"),
+        (11, "07",      "Hydra-L"),
+        (12, "08",      "Hydra-L"),
+        (13, "01",      "Сервер%20СЕВ"),
+        (14, "02",      "Сервер%20СЕВ"),
+        (15, "03",      "Сервер%20СЕВ"),
+        (16, "01",      "КЛОП_МН"),
+        (17, "02",      "КЛОП_МН"),
+        (18, "03",      "КЛОП_МН"),
+        (18, "04",      "КЛОП_МН")
     ]
     # cur.executemany("INSERT INTO devices VALUES(?, ?, ?);", devices)
     # conn.commit()
@@ -80,13 +81,12 @@ def main():
     );
     """)
 
-    
     # for id, serial, uname in devs:
     #     sens_list = get_sensors(serial, uname)
     #     for s in sens_list:
     #         cur.execute("INSERT INTO sensors VALUES(?, ?, ?, ?)", (n, id, s, "UNKNOWN"))
     #         n += 1
-        
+
     # conn.commit()
     # cur.execute("SELECT devices.uname, sensors.name FROM sensors LEFT JOIN devices ON devices.deviceid=sensors.deviceid WHERE devices.uname='Hydra-L'")
     # cur.execute("SELECT devices.uname, sensors.name FROM sensors LEFT JOIN devices ON devices.deviceid=sensors.deviceid")

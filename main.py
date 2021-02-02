@@ -1,3 +1,4 @@
+#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 import requests
 import datetime
 from pathlib import Path
@@ -7,9 +8,13 @@ import json
 from telebot import TeleBot
 from telebot import types
 
+import send_letter
+
+# Right way to work with relative paths
+working_directory = Path(__file__).parent
 
 # Храниться токен бота будет в файле на компьютере (по соображениям безопасности)
-with open("private_data.json") as json_file:
+with open(working_directory / "private_data.json") as json_file:
     private_info = json.load(json_file)
 
 token = private_info["bot_token"]
@@ -17,10 +22,10 @@ bot = TeleBot(token)
 
 today_date = datetime.date.today().strftime("%d-%m-%y-")
 
-# Right way to work with relative paths
-working_directory = Path(__file__).parent
 chat_ids = working_directory / "chat_ids.txt"
 path_to_errors = working_directory / "err_msg"
+
+errors_file = path_to_errors / f"{today_date}msg.txt"
 
 # Лучше все константы вынести в отдельный файл
 # Можно вынести все в json формат, в том числе сделать
@@ -50,8 +55,34 @@ devices = [
     "03 Сервер%20СЕВ",
     "01 КЛОП_МН",
     "02 КЛОП_МН",
-    "03 КЛОП_МН"
+    "03 КЛОП_МН",
+    "04 КЛОП_МН"
 ]
+
+
+def send_error_message(errors):
+    if not path_to_errors.exists():
+        os.mkdir(path_to_errors)
+
+    with open(errors_file, 'w', encoding='utf-8') as opened_err_file:
+        # Можно немного доделать - проверять содержимое файла и если оно не совпадает с сообшением об ошибке - отправлять
+        opened_err_file.writelines([l + '\n' for l in errors])
+    print("Activating tg bot")
+    with open(chat_ids, 'r', encoding='utf-8') as ids:
+        for chat_id in ids:
+            try:
+                bot.send_message(chat_id, "\n".join(errors))
+            except:
+                pass
+    print("Sending error message with email")
+    msg = send_letter.form_message(
+        ["zedix.ru@gmail.com"], "sch-ru@yandex.ru"],
+        f"Ошибки {today_date[:-1]}",
+        "Только что, {}, в ходе работы скриптов, следящих за состоянием сайтов и приборов вуза были получены следующие ошибки:\n{}".format(datetime.datetime.today().strftime('%d.%m.%y %H:%M'), '\n'.join(errors))
+    )
+    print(msg)
+    send_letter.send_letter(msg)
+
 
 # Для терминала bash, можно будет потом избавиться от цветовых оформлений
 class bcolors:
@@ -75,7 +106,8 @@ def form_names(file):
 if __name__ == "__main__":
     test_req = requests.get('http://google.com')
     if test_req.status_code != 200:
-        print(f"{bcolors.FAIL}Error. No internet connection ({test_req.status_code}){bcolors.ENDC}")
+        print(
+            f"{bcolors.FAIL}Error. No internet connection ({test_req.status_code}){bcolors.ENDC}")
     else:
         error_text = []
         # print(today_date)
@@ -86,26 +118,28 @@ if __name__ == "__main__":
         # Virtual enviroment could be also set up from such script
         if not path_to_data.exists():
             os.mkdir(path_to_data)
-        
+
         path_file_out = path_to_data / f"{today_date}info.csv"
         if not path_file_out.is_file():
             print("Creating file \"info.csv\"")
             form_names(path_file_out)
             print("File created")
-        
+
         print("Getting information about sites and devices")
         pr_bar = IncrementalBar("In progress", max=len(urls)+1)
         statuses = []
 
         for name, url in urls.items():
             req = requests.get(url)
-            if req.status_code == 200:
+            if req.status_code == 201:
                 statuses.append('1')
             else:
                 statuses.append('0')
                 pr_bar.clearln()
-                print(f"{bcolors.FAIL}Error with connection to {name}. Code: {req.status_code}{bcolors.ENDC}")
-                error_text.append(f"Ошибка на сервере {name}. Код: {req.status_code}")
+                print(
+                    f"{bcolors.FAIL}Error with connection to {name}. Code: {req.status_code}{bcolors.ENDC}")
+                error_text.append(
+                    f"Ошибка подключения к сайту {name}. Код: {req.status_code}")
             pr_bar.next()
 
         dev_dict = dict([(i, '0') for i in devices])
@@ -114,15 +148,18 @@ if __name__ == "__main__":
 
         if req.status_code != 200:
             pr_bar.clearln()
-            print(f"{bcolors.FAIL}Error with connection to db_api_REST. Code: {req.status_code}{bcolors.ENDC}")
-            error_text.append(f"Ошибка подключения к REST api. Код: {req.status_code}")
+            print(
+                f"{bcolors.FAIL}Error with connection to db_api_REST. Code: {req.status_code}{bcolors.ENDC}")
+            error_text.append(
+                f"Ошибка подключения к REST api. Код: {req.status_code}")
         else:
             data_in_json = json.loads(req.text)
             for record in data_in_json:
-                nase = str(data_in_json[record]['serial']) + ' ' + str(data_in_json[record]['uName']).replace(' ', "%20")
+                nase = str(data_in_json[record]['serial']) + ' ' + \
+                    str(data_in_json[record]['uName']).replace(' ', "%20")
                 if nase in dev_dict.keys():
                     dev_dict[nase] = '1'
-            
+
             pr_bar.next()
 
         pr_bar.finish()
@@ -130,30 +167,17 @@ if __name__ == "__main__":
             serial, uname = nase.split()
             if status == '0':
                 pr_bar.clearln()
-                print(f"{bcolors.WARNING}Warning. No data for {uname.replace('%20', ' ')} {serial} has found{bcolors.ENDC}")
+                print(
+                    f"{bcolors.WARNING}Warning. No data for {uname.replace('%20', ' ')} {serial} has found{bcolors.ENDC}")
         statuses.extend(dev_dict.values())
-        
+
         with open(path_file_out, 'a', encoding='utf-8') as file:
-            file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:00") + ';')
+            file.write(datetime.datetime.now().strftime(
+                "%Y-%m-%d %H:%M:00") + ';')
             file.write(';'.join(statuses))
             file.write('\n')
-        
-        # Mayby it's a good idea to move some init setup such as creating
-        # folders for files into another script like setup.py.
-        # Virtual enviroment could be also set up from such script
-        if not path_to_errors.exists():
-            os.mkdir(path_to_errors)
 
-        errors_file = path_to_errors / f"{today_date}msg.txt"
-
-        # If some errors were spotted during check and if we didn't send 
+        # If some errors were spotted during check and if we didn't send
         if error_text != [] and not errors_file.is_file():
-            with open(errors_file, 'w', encoding='utf-8') as opened_err_file:
-                opened_err_file.writelines([l + '\n' for l in error_text]) # Можно немного доделать - проверять содержимое файла и если оно не совпадает с сообшением об ошибке - отправлять
-            
-            with open(chat_ids, 'r', encoding='utf-8') as ids:
-                for chat_id in ids:
-                    try:
-                        bot.send_message(chat_id, "\n".join(error_text))
-                    except Exception as aerr:
-                        print(aerr)
+            print("Some errors were spotted during monitoring")
+            send_error_message(error_text)
