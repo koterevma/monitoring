@@ -1,16 +1,18 @@
+import base64
+import io
 import dash
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 from bs4 import BeautifulSoup
 import requests
 import json
 from datetime import datetime as dt, timedelta as td
 from datetime import date
-
+import db_get as db
 data = []
 date1, date2 = None, None
 
@@ -53,7 +55,7 @@ def build_left_block():
             "Датчик",
             dcc.Dropdown(id='sensor', multi=True, style={'color': 'black'}),
         ],
-        style={'width': '75%', 'display': 'inline-block', 'padding': '10px 0px 30px 40px'}
+        style={'width': '65%', 'display': 'inline-block', 'padding': '10px 0px 30px 80px'}
     )
 
 
@@ -88,7 +90,7 @@ def build_centre_block():
                 value='lines',
                 style={'color': 'black'}
             ),
-        ], style={'width': '75%', 'display': 'inline-block', 'padding': '10px 0px 0px 50px'}
+        ], style={'width': '65%', 'display': 'inline-block', 'padding': '10px 0px 0px 50px'}
     )
 
 
@@ -111,6 +113,8 @@ def build_right_block():
             ),
             html.Div(
                 [
+                    dcc.Upload(html.Button('Загрузить JSON', className='button'), id='upload',
+                               style={'padding':'20px 20px 0px 0px'}),
                     html.Div(
                         daq.BooleanSwitch(
                             id="Kalman",
@@ -121,24 +125,24 @@ def build_right_block():
                         ),
                         # style={'display': 'inline-block'}
                     ),
+
+
+
                     html.Div(
                         daq.BooleanSwitch(
                             id="Online",
                             on=False,
-                            label='API ON/OFF',
+                            label='API',
                             color='rgb(16,119,94)',
                             labelPosition='top'
                         ),
-                        style={'padding': '0px 0px 0px 150px'}
+                        style={'padding': '0px 0px 0px 20px'}
                     ),
 
-                ], style={'display': 'flex'}
+                ], style={'display': 'flex', 'align-items': 'center'},
+
             ),
 
-            dcc.Upload(
-                # html.Button('Upload File'),
-                id='upload'
-            ),
         ], style={'width': '40%', 'display': 'inline-block', 'padding': '10px 10px 0px 50px'}
     )
 
@@ -182,61 +186,6 @@ def create_URL(date_begin, date_end):
 def create_Meteo_URL(date_begin):
     return "https://www.gismeteo.ru/diary/11441/{}/{}/".format(str(date_begin.year), str(date_begin.month), )
 
-
-def GetMeteo(type_, date_begin, date_end):
-    x_arr, y_arr = [], []
-
-    date_begin = dt.strptime(date_begin, '%Y-%m-%d')
-    date_end = dt.strptime(date_end, '%Y-%m-%d')
-    date_begin = dt(date_begin.year, date_begin.month, 1)
-    date_end = dt(date_end.year, date_end.month, 1)
-
-    html = get_html_page(create_Meteo_URL(date_begin))
-    soup = BeautifulSoup(html, 'html.parser')
-    table = soup.find('table')
-    data = table.find('tbody').findAll('tr')
-    for row in data:
-        day = row.findAll('td')
-        x_arr.append(date(date_begin.year, date_begin.month, int(day[0].text)).strftime('%Y-%m-%d'))  # Дата
-        if type_ == 'temp':
-            y_arr.append((int(day[1].text) + int(day[6].text)) / 2)  # Температура
-        else:
-            y_arr.append((float(day[2].text) + float(day[7].text)) / 2)  # Давление
-
-    if date_begin != date_end:
-        if date_begin.month == 12:
-            next_year = date_begin.year + 1
-            next_month = 1
-            next_day = 1
-        else:
-            next_year = date_begin.year
-            next_month = date_begin.month + 1
-            next_day = 1
-
-        newDate = date(next_year, next_month, next_day).strftime('%Y-%m-%d')
-        next_x, next_y = GetMeteo(type_, newDate, date_end.strftime('%Y-%m-%d'))
-        x_arr.extend(next_x)
-        y_arr.extend(next_y)
-    return x_arr, y_arr
-
-
-####################################################################
-# def CSV(data, type_):
-#     x_arr, y_arr = [], []
-#     content_string = data.split(',')
-#     # print(content_string)
-#     decoded = base64.b64decode(data)
-#     # print(decoded)
-#     df = csv.reader(io.StringIO(decoded.decode('utf-8')), delimiter=';')
-#     next(df)
-#     next(df)
-#     for item in df:
-#         x_arr.append(item[0])
-#         if type_ == 'temp':
-#             y_arr.append(float(item[1]))
-#         else:
-#             y_arr.append(float(item[2]))
-#     return x_arr, y_arr
 
 ####################################################################
 def sorting(y_temp, round_):
@@ -344,6 +293,18 @@ def get_data(uName, serial, type):
 def rounding(x_arr):
     return [round(i, 3) for i in x_arr]
 
+
+def parse_contests(contents, filename, date):
+    temp = None
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    if '.txt' in filename or '.json' in filename or '.JSON' in filename:
+        temp = json.load(io.StringIO(decoded.decode("utf-8")))
+
+    return temp
+
+
 ####################################################################
 def Kalman_filter(x_arr):
     sPsi = 1
@@ -360,17 +321,20 @@ def Kalman_filter(x_arr):
 
 
 @app.callback([Output('appliances', 'options'), Output('appliances', 'value')],
-              [Input('date', 'start_date'), Input('date', 'end_date'), dash.dependencies.Input('Online', 'on')])
-def update_dropdown(start_date, end_date, on):
+              [Input('date', 'start_date'), Input('date', 'end_date'), dash.dependencies.Input('Online', 'on'),
+               Input('upload', 'contents')
+               ],
+              [State('upload', 'filename'), State('upload', 'last_modified')])
+def update_dropdown(start_date, end_date, on, list_of_contents, list_of_names, list_of_dates):
     global data, date1, date2
     if not data or (date1 != start_date or date2 != end_date):
         date1, date2 = start_date, end_date
+    if list_of_contents is not None and not on:
+        data = parse_contests(list_of_contents, list_of_names, list_of_dates)
+        # with open("log.JSON", 'r', encoding='utf-8') as read_file:
+        #     data = json.load(read_file)
     if on:
         data = json.loads(get_html_page(create_URL(start_date, end_date)))
-
-    else:
-        with open("log.JSON", 'r', encoding='utf-8') as read_file:
-            data = json.load(read_file)
 
     res = [dict(label=el, value=el) for el in create_appliances_list(data).keys()]
 
@@ -400,19 +364,21 @@ def update_graph(sensor, type_, round_, filter):
     fig = go.Figure()
     fig.update_layout(
         yaxis=dict(
-            titlefont={'color': 'white'},
-            title='Значения',
-            titlefont_size=16,
-            tickfont_size=14,
+            tickfont_size=20,
+            title=''
+        ),
+        xaxis=dict(
+            tickfont_size=20,
+            title=''
         ),
         title='',
         showlegend=False,
         autosize=True,
         height=710,
         colorway=['rgb(0,48,255)', 'rgb(0,204,58)', 'rgb(255,154,0)',
-                  'rgb(255,0,0)', 'rgb(180,0,210)', 'rgb(0,205,255)', 'rgb(115,90,79)'],
+                  'rgb(255,0,0)', 'rgb(180,0,210)', 'rgb(0,205,255)', 'rgb(115,90,79)', 'rgb(76,118,76)'],
 
-        margin=dict(t=0, b=10, r=40, l=20),
+        margin=dict(t=0, b=10, r=80, l=80),
         font_color='white',
         plot_bgcolor='white',
         paper_bgcolor="rgb(75, 75, 83)",
@@ -426,16 +392,10 @@ def update_graph(sensor, type_, round_, filter):
 
     )
     fig.update_xaxes(
-<<<<<<< HEAD
-        linecolor='black',
-        gridcolor='lightgrey',
-        zerolinecolor='black',
-=======
         linecolor='Gainsboro',
         gridcolor='Gainsboro',
         zerolinecolor='Gainsboro',
->>>>>>> 25fcab734a77cf35e63139af990dd411e04ff6bc
-        rangeslider_visible=True,
+        #rangeslider_visible=True,
         # rangeselector=dict(
         #     buttons=list([
         #         dict(count=1, label="1H", step="hour", stepmode="backward"),
@@ -446,19 +406,16 @@ def update_graph(sensor, type_, round_, filter):
         # )
     ),
     fig.update_yaxes(
-<<<<<<< HEAD
-        linecolor='black',
-        gridcolor='lightgrey',
-        zerolinecolor='black',
-=======
+
         linecolor='Gainsboro',
         gridcolor='Gainsboro',
         zerolinecolor='Gainsboro',
->>>>>>> 25fcab734a77cf35e63139af990dd411e04ff6bc
     )
 
     if sensor is None:
         return fig
+
+    fig.update_layout(yaxis=dict(title=db.units(sensor[0].split('|')[2])[0], titlefont_size=22))
 
     for el in sensor:
         uName, serial, item = get_info(el)
@@ -478,12 +435,9 @@ def update_graph(sensor, type_, round_, filter):
         else:
             fig.add_trace(go.Scatter(x=x_arr, y=y_arr, mode=type_, name="{} ({})".format(uName + ' ' + serial, item),
                                      hovertemplate="<b>%{y}</b>"))
-    # if round_ == 'day':
-    #     temp_x, temp_y = GetMeteo('temp', date1, date2)
-    #     fig.add_trace(go.Scatter(x=temp_x, y=temp_y, mode=type_, name="GetMeteo_temp"))
 
     return fig
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)  # True если надо получать сообщения об ошибках
+    app.run_server(debug=False)  # True если надо получать сообщения об ошибках
