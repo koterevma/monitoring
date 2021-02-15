@@ -103,10 +103,11 @@ def build_right_block():
                     dcc.DatePickerRange(
                         id='date',
                         min_date_allowed=dt(2019, 1, 28),
-                        max_date_allowed=date.today(),
+                        max_date_allowed=date.today() + td(days=1),
                         initial_visible_month=date.today(),
                         start_date=date.today(),
-                        end_date=date.today() + td(days=1),
+                        end_date=date.today(),
+                        minimum_nights=0,
                     ),
                 ],
 
@@ -131,7 +132,7 @@ def build_right_block():
                     html.Div(
                         daq.BooleanSwitch(
                             id="Online",
-                            on=False,
+                            on=True,
                             label='API',
                             color='rgb(16,119,94)',
                             labelPosition='top'
@@ -178,8 +179,28 @@ def get_html_page(url):
     return html
 
 
+def get_json(date_begin, date_end):
+    full_data = {}
+    dt1, dt2 = dt.fromisoformat(date_begin), dt.fromisoformat(date_end)
+
+    while dt1 <= dt2:
+        dt12 = dt1 + td(days=1)
+        print("))))))", str(dt1), str(dt12), sep='\n', end='\n\n')
+        url = create_URL(dt1.strftime('%Y-%m-%d'), dt12.strftime('%Y-%m-%d'))
+        try:
+            f = requests.get(url)
+            print("DONE")
+        except requests.exceptions.RequestException as e:
+            print(e)
+        else:
+            full_data.update(json.loads(f.text))
+        dt1 += td(days=1)
+
+    return full_data
+
+
 def create_URL(date_begin, date_end):
-    return "http://webrobo.mgul.ac.ru:3000/db_api_REST/calibr/log/{}%2000:00:00/{}%2000:00:00".format(date_begin,
+    return "http://webrobo.mgul.ac.ru:3000/db_api_REST/not_calibr/log/{}%2000:00:00/{}%2023:59:59".format(date_begin,
                                                                                                       date_end)
 
 
@@ -296,7 +317,7 @@ def rounding(x_arr):
 
 def parse_contests(contents, filename, date):
     temp = None
-    content_type, content_string = contents.split(',')
+    _, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
 
     if '.txt' in filename or '.json' in filename or '.JSON' in filename:
@@ -334,7 +355,7 @@ def update_dropdown(start_date, end_date, on, list_of_contents, list_of_names, l
         # with open("log.JSON", 'r', encoding='utf-8') as read_file:
         #     data = json.load(read_file)
     if on:
-        data = json.loads(get_html_page(create_URL(start_date, end_date)))
+        data = get_json(start_date, end_date)
 
     res = [dict(label=el, value=el) for el in create_appliances_list(data).keys()]
 
@@ -415,7 +436,8 @@ def update_graph(sensor, type_, round_, filter):
     if sensor is None:
         return fig
 
-    fig.update_layout(yaxis=dict(title=db.units(sensor[0].split('|')[2])[0], titlefont_size=22))
+    if sensor != []:
+        fig.update_layout(yaxis=dict(title=db.units(sensor[0].split('|')[2])[0], titlefont_size=22))
 
     for el in sensor:
         uName, serial, item = get_info(el)
@@ -440,4 +462,4 @@ def update_graph(sensor, type_, round_, filter):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)  # True если надо получать сообщения об ошибках
+    app.run_server(debug=True)  # True если надо получать сообщения об ошибках
