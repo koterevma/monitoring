@@ -22,10 +22,11 @@ def main():
                     'Ольховик Н. С.\nЩербаков В. Ю.\n','Носков М. П.\nЦветков Ю. А.\n', 'Чупис С. А.\nФролова П. В.\n', 'Носков И. В.\nЛегин Д. И.\n',
                     'Красовский Г. О.\nШнырина А. Н.\n', 'Тебеньков К. А.\nМашкарь М. Ю.\n', 'Воскресенский О. А.\nАртёмов А. А.\n', 'Котерев М. А.\nМихальченко М. Е.\n',
                     'Кетрой Д. А.\nЛинкевич М. М.\n', 'Соловьев П. А.\nЗавьялов И. А.\n', 'Лямин А. С.\nСанжурин С. В.\n', 'Фалин А. Д.\nПолторацкий С. А.\n']
+    working_directory = Path(__file__).parent
 
-    today_date = datetime.date.today().strftime("%d-%m-%y")
-    path_file_in = Path(f"py\csv.csv")
-    path_file_out = Path(f"py\data.docx")
+    today_date = datetime.date.today().strftime("%d-%m-%y-")
+    path_file_in = working_directory / f"data/{today_date}info.csv"
+    path_file_out = working_directory / f"reports/{today_date}report.docx"
     url = 'https://vk.com/doc318247198_588372326?hash=2935512c2301060857&dl=1bd55339548be8720b'
     #url = 'https://drive.google.com/u/0/uc?id=1dgdUBBmExKNNZmom_JVUfgHPXcwTN9bk&export=download' old link
     currbrigade = list()
@@ -56,8 +57,10 @@ def main():
 
     #FILE DOWNLOAD AND BRIGADE READ PART 2
 
-    urllib.request.urlretrieve(url, 'py\sch.ods')
-    schtab = pd.read_excel("py\sch.ods", 'График', engine="odf")
+    to_downloaded = working_directory / "temp/sch.ods"
+    urllib.request.urlretrieve(url, to_downloaded)
+
+    schtab = pd.read_excel(to_downloaded, 'График', engine="odf")
 
     clm = 0
     current_date = str(dates[0])[0:10]+' 00:00:00'
@@ -67,13 +70,13 @@ def main():
             clm = i
             break
 
-    if clm>0:
+    if clm > 0:
         thisday = list(schtab.iloc[:,clm])
         for i in range(len(thisday)):
-            if (thisday[i]==1)|(thisday[i]==2)|(thisday[i]==5)|(thisday[i]==3)|(thisday[i]==4)|(thisday[i]==0):
-                if i>13: currbrigade.append((i-1,brigades[i-4]))
+            if thisday[i] >= 0 and thisday[i] <= 5:
+                if i > 13: currbrigade.append((i-1,brigades[i-4]))
                 else: currbrigade.append((i-1,brigades[i-2]))
-    elif clm==0:
+    elif clm == 0:
         for i in range(6):
             currbrigade.append((0,'#NAME SURNAME\n#NAME SURNAME'))
 
@@ -89,7 +92,9 @@ def main():
     p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     p1r1 = p1.add_run('Министерство науки и высшего образования\n Российской Федерации Мытищинский филиал\n')
-    p1r1.add_picture('py\h.png')
+    path_to_picture = working_directory / "media/images/herb.jpg"
+    # print(str(path_to_picture))
+    p1r1.add_picture(str(path_to_picture))
     p1r1.add_text('\nФедеральное государственное бюджетное образовательное\n учреждение\n высшего образования\n' 
                    + '«Московский государственный технический университет\n имени Н.Э. Баумана\n' 
                    + '(национальный исследовательский университет)»\n(МГТУ им. Н.Э. Баумана)\n')
