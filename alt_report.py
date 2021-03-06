@@ -13,22 +13,26 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
 
-
 def main():
 
-    #INITIALIZATION PART 0
-
-    brigades = ['Цыбулин П. А.\nМарков Г. С.\n', 'Базылев А. А.\nЯшин Н. А.\n', 'Патокин С. В.\nЗаидов А. Р.\n', 'Савченко В. А.\nЗайцев А. И.\n',
-                    'Ольховик Н. С.\nЩербаков В. Ю.\n','Носков М. П.\nЦветков Ю. А.\n', 'Чупис С. А.\nФролова П. В.\n', 'Носков И. В.\nЛегин Д. И.\n',
-                    'Красовский Г. О.\nШнырина А. Н.\n', 'Тебеньков К. А.\nМашкарь М. Ю.\n', 'Воскресенский О. А.\nАртёмов А. А.\n', 'Котерев М. А.\nМихальченко М. Е.\n',
-                    'Кетрой Д. А.\nЛинкевич М. М.\n', 'Соловьев П. А.\nЗавьялов И. А.\n', 'Лямин А. С.\nСанжурин С. В.\n', 'Фалин А. Д.\nПолторацкий С. А.\n']
+    #PATHS PART PRE
     working_directory = Path(__file__).parent
+    today_date = datetime.date.today().strftime("%d-%m-%y")
 
-    today_date = datetime.date.today().strftime("%d-%m-%y-")
     path_file_in = working_directory / f"data/{today_date}info.csv"
     path_file_out = working_directory / f"reports/{today_date}report.docx"
-    url = 'https://vk.com/doc318247198_588372326?hash=2935512c2301060857&dl=1bd55339548be8720b'
-    #url = 'https://drive.google.com/u/0/uc?id=1dgdUBBmExKNNZmom_JVUfgHPXcwTN9bk&export=download' old link
+    path_to_picture = working_directory / "media/images/herb.jpg"
+    to_downloaded = working_directory / "temp/sch.ods"
+    url = 'https://vk.com/doc318247198_590268626?hash=d1195958e9be610569&dl=8b378c2da5ec11aef3'
+
+    #INITIALIZATION PART 0
+    
+    brigades2 = [('Цыбулин П. А.', 'Марков Г. С.'), ('Базылев А. А.','Яшин Н. А.'), ('Патокин С. В.', 'Заидов А. Р.'), ('Савченко В. А.', 'Зайцев А. И.'), ('Ольховик Н. С.', 'Щербаков В. Ю.'), ('Носков М.П.', 'Цветков Ю.А.'),
+                 ('Чупис С. А.', 'Фролова П. В.'), ('Носков И. В.','Легин Д. И.'),('Красовский Г. О.','Шнырина А. Н.'), ('Тебеньков К. А.', 'Машкарь М. Ю.'), ('Воскресенский О. А.', 'Артёмов А. А.'), ('Котерев М. А.','Михальченко М. Е.'),
+                 ('Кетрой Д. А.', 'Линкевич М. М.'), ('Соловьев П. А.', 'Завьялов И. А.'), ('Лямин А. С.', 'Санжурин С. В.'), ('Фалин А. Д.','Полторацкий С. А.')]
+
+    
+    
     currbrigade = list()
 
     #TABLE READ PART 1
@@ -57,9 +61,7 @@ def main():
 
     #FILE DOWNLOAD AND BRIGADE READ PART 2
 
-    to_downloaded = working_directory / "temp/sch.ods"
     urllib.request.urlretrieve(url, to_downloaded)
-
     schtab = pd.read_excel(to_downloaded, 'График', engine="odf")
 
     clm = 0
@@ -70,56 +72,84 @@ def main():
             clm = i
             break
 
-    if clm > 0:
+    if clm>0:
         thisday = list(schtab.iloc[:,clm])
         for i in range(len(thisday)):
-            if thisday[i] >= 0 and thisday[i] <= 5:
-                if i > 13: currbrigade.append((i-1,brigades[i-4]))
-                else: currbrigade.append((i-1,brigades[i-2]))
-    elif clm == 0:
+            if (thisday[i]==1)|(thisday[i]==2)|(thisday[i]==5)|(thisday[i]==3)|(thisday[i]==4)|(thisday[i]==0):
+                if i>13: currbrigade.append((i-1,brigades2[i-4]))
+                else: currbrigade.append((i-1,brigades2[i-2]))
+    elif clm==0:
         for i in range(6):
             currbrigade.append((0,'#NAME SURNAME\n#NAME SURNAME'))
 
-    #TITLE CREATION PART 3
+    #TITLE LIST CREATION PART 3
 
     p1 = doc.add_paragraph()
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     p2 = doc.add_paragraph()
-    p2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-    p3 = doc.add_paragraph()
-    p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     p1r1 = p1.add_run('Министерство науки и высшего образования\n Российской Федерации Мытищинский филиал\n')
-    path_to_picture = working_directory / "media/images/herb.jpg"
-    # print(str(path_to_picture))
     p1r1.add_picture(str(path_to_picture))
+    p1r1.add_break(WD_BREAK.LINE)
     p1r1.add_text('\nФедеральное государственное бюджетное образовательное\n учреждение\n высшего образования\n' 
                    + '«Московский государственный технический университет\n имени Н.Э. Баумана\n' 
                    + '(национальный исследовательский университет)»\n(МГТУ им. Н.Э. Баумана)\n')
-    p1r1.add_text('______________________________________________________________________________________________\n'
-                  + '______________________________________________________________________________________________\n')
+    p1r1.add_text('__________________________________________________________________________________________\n'
+                  + '__________________________________________________________________________________________\n')
     p1r1.font.bold=True
     p1r1.font.size = Pt(12)
     
-    p1r2 = p1.add_run('ФАКУЛЬТЕТ Космический\n КАФЕДРА «Прикладная математика, информатика и вычислительная техника» K3-МФ\n\n\n')
+    p1r2 = p1.add_run('ФАКУЛЬТЕТ Космический\n КАФЕДРА «Прикладная математика, информатика и вычислительная техника» K3-МФ\n')
     p1r2.font.size = Pt(14)
     p1r2.font.bold = True
 
-    p1r3 = p1.add_run('Отчет\n По дежурству\n\n')
+    p1r3 = p1.add_run('Отчет\n По дежурству\n')
     p1r3.font.size = Pt(28)
     p1r3.font.bold = True
 
-    p2r1 = p2.add_run('Бригада: '+ str(currbrigade[0][0])+'\n'+currbrigade[0][1]+'\n')
-    p2r1.add_text('Бригада: '+str(currbrigade[1][0])+'\n'+currbrigade[1][1]+'\n')
-    p2r1.add_text('Бригада: '+str(currbrigade[2][0])+ '\n'+currbrigade[2][1]+'\n\n')
-    p2r1.font.size = Pt(14)
+    if len(currbrigade)>3:
+        p2r1 = p2.add_run('Бригада '+ str(currbrigade[0][0])+'                                             Бригада '+str(currbrigade[1][0])+'\n')
+        p2r2 = p2.add_run(str(currbrigade[0][1][0])+'                                             '+currbrigade[1][1][0]+'\n')
+        p2r2.add_text(str(currbrigade[0][1][1])+ '                                             '+currbrigade[1][1][1])
+        p2r2.add_break(WD_BREAK.LINE)
+        p2r2.add_break(WD_BREAK.LINE)
 
-    p3r1 = p3.add_run('Дата прохождения дежурства: '+current_date[0:10]+'\n\n\n'+'Москва '+current_date[0:4]+'\n\n')
-    p3r1.font.size = Pt(14)
-    p3r1.font.bold = True
-    p3r1.add_break(WD_BREAK.PAGE)
+        p2r3 = p2.add_run('Бригада '+ str(currbrigade[2][0])+'                                             Бригада '+str(currbrigade[3][0])+'\n')
+        p2r4 = p2.add_run(str(currbrigade[2][1][0])+'                                             '+currbrigade[3][1][0]+'\n')
+        p2r4.add_text(str(currbrigade[2][1][1])+ '                                             '+currbrigade[3][1][1])
+        p2r4.add_break(WD_BREAK.LINE)
+        p2r4.add_break(WD_BREAK.LINE)
+
+        p2r5 = p2.add_run('Бригада '+ str(currbrigade[4][0])+'                                             Бригада '+str(currbrigade[5][0])+'\n')
+        p2r6 = p2.add_run(str(currbrigade[4][1][0])+'                                             '+currbrigade[5][1][0]+'\n')
+        p2r6.add_text(str(currbrigade[4][1][1])+ '                                             '+currbrigade[5][1][1])
+        p2r6.add_break(WD_BREAK.LINE)
+        p2r6.add_break(WD_BREAK.LINE)
+        
+        p2r1.font.size = p2r2.font.size = p2r3.font.size = p2r4.font.size = p2r5.font.size = p2r6.font.size =  Pt(14)
+    else:  
+        p2r1 = p2.add_run('Бригада '+ str(currbrigade[0][0])+'                                             Бригада '+str(currbrigade[1][0])+'\n')
+        p2r2 = p2.add_run(str(currbrigade[0][1][0])+'                                             '+currbrigade[1][1][0]+'\n')
+        p2r2.add_text(str(currbrigade[0][1][1])+ '                                             '+currbrigade[1][1][1])
+        p2r3 = p2.add_run('\n\n')
+
+        p2r3 = p2.add_run('Бригада '+str(currbrigade[2][0])+'\n')
+        p2r4 = p2.add_run(currbrigade[2][1][0]+'\n')
+        p2r4.add_text(currbrigade[2][1][1])
+        p2r4.add_break(WD_BREAK.LINE)
+        p2r4.add_break(WD_BREAK.LINE)
+        p2r4.add_break(WD_BREAK.LINE)
+        p2r4.add_break(WD_BREAK.LINE)
+        p2r4.add_break(WD_BREAK.LINE)
+
+        p2r1.font.size = p2r2.font.size = p2r3.font.size = p2r4.font.size =Pt(14)
+
+    p2r7 = p2.add_run('Дата прохождения дежурства: '+current_date[0:10]+'\n'+'Москва '+current_date[0:4])
+    p2r7.font.size = Pt(14)
+    p2r7.font.bold = True
+    p2r7.add_break(WD_BREAK.PAGE)
 
     #TABLE CREATION PART 4
 
