@@ -1,7 +1,12 @@
 #!/usr/bin/bash
 
-python3 -m venv venv
+mkdir data
+mkdir reports
+mkdir err_msg
+touch private_data.json
+touch chat_ids.txt
 
+python3 -m venv venv
 source venv/bin/activate
 
 pip install -U pip

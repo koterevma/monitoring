@@ -42,7 +42,7 @@ def form_message(to, subject, text):
 
 
 def main():
-    addr_to = ["zedix.ru@gmail.com", "mr.lux1@yandex.ru"]
+    addr_to = ["zedix.ru@gmail.com", "mr.lux1@yandex.ru", "JLoGuk@mail.ru"]
 
     today_date = datetime.today().strftime("%d-%m-%y-")
     path_to_xl_file = working_directory / f"reports/{today_date}report.docx"

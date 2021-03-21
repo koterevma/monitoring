@@ -61,9 +61,6 @@ devices = [
 
 
 def send_error_message(errors):
-    if not path_to_errors.exists():
-        os.mkdir(path_to_errors)
-
     with open(errors_file, 'w', encoding='utf-8') as opened_err_file:
         # Можно немного доделать - проверять содержимое файла и если оно не совпадает с сообшением об ошибке - отправлять
         opened_err_file.writelines([l + '\n' for l in errors])
