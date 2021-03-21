@@ -7,11 +7,16 @@ from docx.shared import RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
+import os
 
 working_directory = Path(__file__).parent
 
+path_to_reports = working_directory / "reports"
 
 def main():
+    if not path_to_reports.exists(): # Temporary, lately will be added to setup script
+        os.mkdir(path_to_reports)
+
     today_date = datetime.date.today().strftime("%d-%m-%y-")
     path_file_in = working_directory / f"data/{today_date}info.csv"
     path_file_out = working_directory / f"reports/{today_date}report.docx"
