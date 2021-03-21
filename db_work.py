@@ -1,4 +1,3 @@
-#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 from pathlib import Path
 import sqlite3
 import requests
@@ -88,11 +87,11 @@ def main():
     #         n += 1
 
     # conn.commit()
-    # cur.execute("SELECT devices.uname, sensors.name FROM sensors LEFT JOIN devices ON devices.deviceid=sensors.deviceid WHERE devices.uname='Hydra-L'")
+    cur.execute("SELECT devices.uname, sensors.name FROM sensors LEFT JOIN devices ON devices.deviceid=sensors.deviceid WHERE devices.uname='Hydra-L' AND devices.serial='08'")
     # cur.execute("SELECT devices.uname, sensors.name FROM sensors LEFT JOIN devices ON devices.deviceid=sensors.deviceid")
-    cur.execute("UPDATE sensors SET units='lux' WHERE name='BH1750_lux'")
-    conn.commit()
-    cur.execute("SELECT * FROM sensors")
+    # cur.execute("UPDATE sensors SET units='lux' WHERE name='BH1750_lux'")
+    # conn.commit()
+    # cur.execute("SELECT * FROM sensors")
     rez = cur.fetchall()
     print(*rez, sep='\n')
     # print(rez)
