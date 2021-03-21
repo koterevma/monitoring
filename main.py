@@ -74,7 +74,7 @@ def send_error_message(errors):
                 pass
     print("Sending error message with email")
     msg = send_letter.form_message(
-        ["zedix.ru@gmail.com"], #, "sch-ru@yandex.ru"],
+        ["zedix.ru@gmail.com", "sch-ru@yandex.ru"],
         f"Ошибки {today_date[:-1]}",
         "Только что, {}, в ходе работы скриптов, следящих за состоянием сайтов и приборов вуза были получены следующие ошибки:\n{}\n\nСообщение было создано и отправлено автоматически".format(datetime.datetime.today().strftime('%d.%m.%y %H:%M'), '\n'.join(errors))
     )
