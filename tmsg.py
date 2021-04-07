@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from telebot import TeleBot
 from telebot import types
 import json

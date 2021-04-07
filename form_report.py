@@ -59,7 +59,7 @@ def main():
     shade_row = list()
     shade_col = list()
 
-    #FILE DOWNLOAD AND BRIGADE READ PART 2
+    # FILE DOWNLOAD AND BRIGADE READ PART 2
 
     urllib.request.urlretrieve(url, to_downloaded)
     schtab = pd.read_excel(to_downloaded, 'График', engine="odf")
