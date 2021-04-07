@@ -1,4 +1,3 @@
-#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 from telebot import TeleBot
 from telebot import types
 import json

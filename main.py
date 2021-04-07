@@ -1,4 +1,3 @@
-#!/home/mkoterev/Python/newmon/monitoring/venv/bin/python3
 import requests
 import datetime
 from pathlib import Path
