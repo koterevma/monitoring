@@ -45,7 +45,7 @@ def main():
     addr_to = ["zedix.ru@gmail.com", "mr.lux1@yandex.ru", "JLoGuk@mail.ru"]
 
     today_date = datetime.today().strftime("%d-%m-%y-")
-    path_to_xl_file = working_directory / f"reports/{today_date}report.docx"
+    path_to_sending_file = working_directory / f"reports/{today_date}report.docx"
     filename_docx = f"{today_date}report.docx"
     path_to_csv_file = working_directory / f"data/{today_date}info.csv"
     filename_csv = f"{today_date}info.csv"
@@ -57,7 +57,7 @@ def main():
     )
 
     part = MIMEBase('application', "octet-stream")
-    part.set_payload(open(path_to_xl_file, "rb").read(), 'utf-8')
+    part.set_payload(open(path_to_sending_file, "rb").read(), 'utf-8')
     encoders.encode_base64(part)
     part.add_header('Content-Disposition',
                     f'attachment; filename="{filename_docx}"')
