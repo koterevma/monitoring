@@ -131,11 +131,12 @@ if __name__ == "__main__":
             except requests.exceptions.ConnectionError as e:
                 pr_bar.clearln()
                 handle_site_err(error_text, statuses, name, str(e))
-            if req.status_code == 200:
-                statuses.append('1')
             else:
-                pr_bar.clearln()
-                handle_site_err(error_text, statuses, name, str(req.status_code))
+                if req.status_code == 200:
+                    statuses.append('1')
+                else:
+                    pr_bar.clearln()
+                    handle_site_err(error_text, statuses, name, str(req.status_code))
             pr_bar.next()
 
         dev_dict = dict([(i, '0') for i in devices])
@@ -148,12 +149,16 @@ if __name__ == "__main__":
             pr_bar.clearln()
             handle_dev_error(error_text, dev_dict, str(req.status_code))
         else:
-            data_in_json = json.loads(req.text)
-            for record in data_in_json:
-                nase = str(data_in_json[record]['serial']) + ' ' + \
-                    str(data_in_json[record]['uName']).replace(' ', "%20")
-                if nase in dev_dict.keys():
-                    dev_dict[nase] = '1'
+            try:
+                data_in_json = json.loads(req.text)
+            except json.decoder.JSONDecodeError as e:
+                print("Error. Json decode error: ", e, '\n\nJSON text:', req.text)
+            else:
+                for record in data_in_json:
+                    nase = str(data_in_json[record]['serial']) + ' ' + \
+                        str(data_in_json[record]['uName']).replace(' ', "%20")
+                    if nase in dev_dict.keys():
+                        dev_dict[nase] = '1'
 
             pr_bar.next()
 
