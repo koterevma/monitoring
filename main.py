@@ -96,14 +96,23 @@ def handle_site_err(err_text, statuses, name, err):
     statuses.append('0')
     print(f"Error with connection to {name} ({err})")
     error_text.append(
-        f"Ошибка подключения к сайту {name} ({err})")
+        f"Ошибка подключения к сайту {name} ({err})"
+    )
     
 
 def handle_dev_error(error_text, dev_dict, err):
     print(f"Error with connection to db_api_REST ({req.status_code})")
     error_text.append(
-        f"Ошибка подключения к REST api ({req.status_code})")
+        f"Ошибка подключения к REST api ({req.status_code})"
+    )
     
+
+def handle_json_error(error_text: list, err: str):
+    print(_err)
+    error_text.append(
+        _err
+    )
+
 
 if __name__ == "__main__":
     try:
@@ -145,14 +154,18 @@ if __name__ == "__main__":
             req = requests.get(url)
         except requests.exceptions.ConnectionError as e:
             handle_dev_error(error_text, dev_dict, str(e))
-        if req.status_code != 200:
-            pr_bar.clearln()
-            handle_dev_error(error_text, dev_dict, str(req.status_code))
         else:
+            if req.status_code != 200:
+                pr_bar.clearln()
+                handle_dev_error(error_text, dev_dict, str(req.status_code))
             try:
                 data_in_json = json.loads(req.text)
             except json.decoder.JSONDecodeError as e:
-                print("Error. Json decode error: ", e, '\n\nJSON text:', req.text)
+                _err = "Json decode error: " + str(e) + \
+                       "\nRecieved text from " + \
+                       "http://webrobo.mgul.ac.ru:3000/db_api_REST/not_calibr/last5min/ \n----------\n" + \
+                        req.text + "----------"
+                handle_json_error(error_text, _err)
             else:
                 for record in data_in_json:
                     nase = str(data_in_json[record]['serial']) + ' ' + \
