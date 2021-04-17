@@ -101,9 +101,9 @@ def handle_site_err(err_text, statuses, name, err):
     
 
 def handle_dev_error(error_text, dev_dict, err):
-    print(f"Error with connection to db_api_REST ({req.status_code})")
+    print(f"Error with connection to db_api_REST ({err})")
     error_text.append(
-        f"Ошибка подключения к REST api ({req.status_code})"
+        f"Ошибка подключения к REST api ({err})"
     )
     
 
