@@ -92,7 +92,7 @@ def form_names(file):
     # print(';'.join(names))
 
 
-def handle_site_err(err_text, statuses, name, err):
+def handle_site_err(error_text, statuses, name, err):
     statuses.append('0')
     print(f"Error with connection to {name} ({err})")
     error_text.append(
