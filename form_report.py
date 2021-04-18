@@ -12,6 +12,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
+from shutil import copyfile
 
 def main():
 
@@ -23,7 +24,8 @@ def main():
     path_file_out = working_directory / f"reports/{today_date}-report.docx"
     path_to_picture = working_directory / "media/images/herb.jpg"
     to_downloaded = working_directory / "temp/sch.ods"
-    url = 'https://vk.com/doc318247198_590268626?hash=d1195958e9be610569&dl=8b378c2da5ec11aef3'
+    to_downloaded_reserve = working_directory / "temp/schold/sch.ods"
+    url = 'https://vk.com/doc380128176_594531820?hash=ec9e3041b9eb1f26db&dl=8a124401930373c179'
 
     #INITIALIZATION PART 0
     
@@ -38,7 +40,11 @@ def main():
     #TABLE READ PART 1
 
     with open(path_file_in, 'r', encoding="utf-8") as file:
-        df = pd.read_csv(file, delimiter=';')
+        try:
+            df = pd.read_csv(file, delimiter=';')
+        except:
+            print('Could not read csv file')
+            return
 
     df = df.set_index('Date')
     df.index = pd.to_datetime(df.index)
@@ -60,25 +66,42 @@ def main():
     shade_col = list()
 
     # FILE DOWNLOAD AND BRIGADE READ PART 2
+    try1 = 1 
+    try2 = 1
 
     urllib.request.urlretrieve(url, to_downloaded)
-    schtab = pd.read_excel(to_downloaded, 'График', engine="odf")
+    try:
+        schtab = pd.read_excel(to_downloaded, 'График', engine="odf")
+        copyfile(to_downloaded,to_downloaded_reserve)
+    except:
+        try1 = 0
+        print("Could not read downloaded file with schedule\n")
+        try:
+            schtab = pd.read_excel(to_downloaded_reserve, 'График', engine="odf")
+        except:
+            try2 = 0
+            print("Could not read reserved file with schedule\n")
 
     clm = 0
     current_date = str(dates[0])[0:10]+' 00:00:00'
+    
+    if try1 or try2:
+        
+        for i in range(schtab.shape[1]):
+            if(str(schtab.iloc[1,i])==current_date):
+                clm = i
+                break
 
-    for i in range(schtab.shape[1]):
-        if(str(schtab.iloc[1,i])==current_date):
-            clm = i
-            break
-
-    if clm>0:
-        thisday = list(schtab.iloc[:,clm])
-        for i in range(len(thisday)):
-            if (thisday[i]==1)|(thisday[i]==2)|(thisday[i]==5)|(thisday[i]==3)|(thisday[i]==4)|(thisday[i]==0):
-                if i>13: currbrigade.append((i-1,brigades2[i-4]))
-                else: currbrigade.append((i-1,brigades2[i-2]))
-    elif clm==0:
+        if clm>0:
+            thisday = list(schtab.iloc[:,clm])
+            for i in range(len(thisday)):
+                if (thisday[i]==1)|(thisday[i]==2)|(thisday[i]==5)|(thisday[i]==3)|(thisday[i]==4)|(thisday[i]==0):
+                    if i>13: currbrigade.append((i-1,brigades2[i-4]))
+                    else: currbrigade.append((i-1,brigades2[i-2]))
+        elif clm==0:
+            for i in range(6):
+                currbrigade.append((0,'#NAME SURNAME\n#NAME SURNAME'))
+    else:
         for i in range(6):
             currbrigade.append((0,'#NAME SURNAME\n#NAME SURNAME'))
 
@@ -108,34 +131,38 @@ def main():
     p1r3 = p1.add_run('Отчет\n По дежурству\n')
     p1r3.font.size = Pt(28)
     p1r3.font.bold = True
+    
+    br = 'Бригада '
+    br1 = '                                             Бригада '
+    br2 = '                                             '
 
     if len(currbrigade)>3:
-        p2r1 = p2.add_run('Бригада '+ str(currbrigade[0][0])+'                                             Бригада '+str(currbrigade[1][0])+'\n')
-        p2r2 = p2.add_run(str(currbrigade[0][1][0])+'                                             '+currbrigade[1][1][0]+'\n')
-        p2r2.add_text(str(currbrigade[0][1][1])+ '                                             '+currbrigade[1][1][1])
+        p2r1 = p2.add_run(br+ str(currbrigade[0][0])+br1+str(currbrigade[1][0])+'\n')
+        p2r2 = p2.add_run(str(currbrigade[0][1][0])+br2+currbrigade[1][1][0]+'\n')
+        p2r2.add_text(str(currbrigade[0][1][1])+br2+currbrigade[1][1][1])
         p2r2.add_break(WD_BREAK.LINE)
         p2r2.add_break(WD_BREAK.LINE)
 
-        p2r3 = p2.add_run('Бригада '+ str(currbrigade[2][0])+'                                             Бригада '+str(currbrigade[3][0])+'\n')
-        p2r4 = p2.add_run(str(currbrigade[2][1][0])+'                                             '+currbrigade[3][1][0]+'\n')
-        p2r4.add_text(str(currbrigade[2][1][1])+ '                                             '+currbrigade[3][1][1])
+        p2r3 = p2.add_run(br+ str(currbrigade[2][0])+br1+str(currbrigade[3][0])+'\n')
+        p2r4 = p2.add_run(str(currbrigade[2][1][0])+br2+currbrigade[3][1][0]+'\n')
+        p2r4.add_text(str(currbrigade[2][1][1])+br2+currbrigade[3][1][1])
         p2r4.add_break(WD_BREAK.LINE)
         p2r4.add_break(WD_BREAK.LINE)
 
-        p2r5 = p2.add_run('Бригада '+ str(currbrigade[4][0])+'                                             Бригада '+str(currbrigade[5][0])+'\n')
-        p2r6 = p2.add_run(str(currbrigade[4][1][0])+'                                             '+currbrigade[5][1][0]+'\n')
-        p2r6.add_text(str(currbrigade[4][1][1])+ '                                             '+currbrigade[5][1][1])
+        p2r5 = p2.add_run(br+ str(currbrigade[4][0])+br1+str(currbrigade[5][0])+'\n')
+        p2r6 = p2.add_run(str(currbrigade[4][1][0])+br2+currbrigade[5][1][0]+'\n')
+        p2r6.add_text(str(currbrigade[4][1][1])+br2+currbrigade[5][1][1])
         p2r6.add_break(WD_BREAK.LINE)
         p2r6.add_break(WD_BREAK.LINE)
-        
+            
         p2r1.font.size = p2r2.font.size = p2r3.font.size = p2r4.font.size = p2r5.font.size = p2r6.font.size =  Pt(14)
     else:  
-        p2r1 = p2.add_run('Бригада '+ str(currbrigade[0][0])+'                                             Бригада '+str(currbrigade[1][0])+'\n')
-        p2r2 = p2.add_run(str(currbrigade[0][1][0])+'                                             '+currbrigade[1][1][0]+'\n')
-        p2r2.add_text(str(currbrigade[0][1][1])+ '                                             '+currbrigade[1][1][1])
+        p2r1 = p2.add_run(br+ str(currbrigade[0][0])+br1+str(currbrigade[1][0])+'\n')
+        p2r2 = p2.add_run(str(currbrigade[0][1][0])+br2+currbrigade[1][1][0]+'\n')
+        p2r2.add_text(str(currbrigade[0][1][1])+br2+currbrigade[1][1][1])
         p2r3 = p2.add_run('\n\n')
 
-        p2r3 = p2.add_run('Бригада '+str(currbrigade[2][0])+'\n')
+        p2r3 = p2.add_run(br+str(currbrigade[2][0])+'\n')
         p2r4 = p2.add_run(currbrigade[2][1][0]+'\n')
         p2r4.add_text(currbrigade[2][1][1])
         p2r4.add_break(WD_BREAK.LINE)
@@ -169,6 +196,7 @@ def main():
 
     k = 0
     m = 0
+    fontSize = 8.5
     for i in range(len(tables)):
         for j in range(df.shape[1]):
             for l in range(int(tablecount)):shade_col.append(parse_xml(r'<w:shd {} w:fill="E6E6E6"/>'.format(nsdecls('w'))))
@@ -177,7 +205,7 @@ def main():
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             trun = paragraph.add_run(df.columns[j])
             trun.font.bold = True
-            trun.font.size = Pt(8)
+            trun.font.size = Pt(fontSize)
             m=m+1
 
         for j in range(columns-1):
@@ -188,7 +216,7 @@ def main():
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             trun = paragraph.add_run(dates[k].strftime("%H:%M:%S - ") + dates[k+1].strftime("%H:%M:%S"))
             trun.font.bold = True
-            trun.font.size = Pt(8)
+            trun.font.size = Pt(fontSize)
             k=k+1
     
     k = 0
@@ -201,6 +229,7 @@ def main():
                 run = paragraph.add_run('✖')
                 run.font.color.rgb = RGBColor(255, 0, 0)
                 run.font.bold = True
+                run.font.size = Pt(fontSize)
 
             elif val==1:
                 paragraph = tables[k].cell(j+1, (i%(columns-1)) + 1).paragraphs[0]
@@ -208,6 +237,7 @@ def main():
                 run = paragraph.add_run('✔')
                 run.font.color.rgb = RGBColor(0, 200, 0)
                 run.font.bold = True
+                run.font.size = Pt(fontSize)
 
     doc.save(path_file_out)
 
