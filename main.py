@@ -100,7 +100,7 @@ def handle_site_err(error_text, statuses, name, err):
     )
     
 
-def handle_dev_error(error_text, dev_dict, err):
+def handle_dev_error(error_text, err):
     print(f"Error with connection to db_api_REST ({err})")
     error_text.append(
         f"Ошибка подключения к REST api ({err})"
@@ -153,11 +153,11 @@ if __name__ == "__main__":
         try:
             req = requests.get(url)
         except requests.exceptions.ConnectionError as e:
-            handle_dev_error(error_text, dev_dict, str(e))
+            handle_dev_error(error_text, str(e))
         else:
             if req.status_code != 200:
                 pr_bar.clearln()
-                handle_dev_error(error_text, dev_dict, str(req.status_code))
+                handle_dev_error(error_text, str(req.status_code))
             try:
                 data_in_json = json.loads(req.text)
             except json.decoder.JSONDecodeError as e:
